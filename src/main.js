@@ -1,13 +1,10 @@
 import { createServer } from 'http';
-import { createApp } from './app.js';
+import app from './app.js';
+import { ensureAppRuntime } from './app-runtime.js';
 import { env } from './config/env.js';
-import { connectDatabase } from './database/mongodb.js';
 import { realtimeHub } from './realtime/realtime.js';
-import { ensureSmoothieSeed } from './smoothies/smoothies.service.js';
 async function bootstrap() {
-    await connectDatabase();
-    await ensureSmoothieSeed();
-    const app = createApp();
+    await ensureAppRuntime();
     const server = createServer(app);
     realtimeHub.init(server);
     server.listen(env.port, () => {

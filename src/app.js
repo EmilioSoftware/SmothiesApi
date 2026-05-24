@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import { ensureAppRuntime } from './app-runtime.js';
 import { authRouter } from './auth/auth.routes.js';
 import { cartRouter } from './cart/cart.routes.js';
 import { chatRouter } from './chat/chat.routes.js';
@@ -7,6 +8,7 @@ import { checkoutRouter } from './checkout/checkout.routes.js';
 import { env } from './config/env.js';
 import { databaseStatus } from './database/mongodb.js';
 import { ordersRouter } from './orders/orders.routes.js';
+import { asyncHandler } from './shared/async-handler.js';
 import { HttpError } from './shared/http-error.js';
 import { smoothiesRouter } from './smoothies/smoothies.routes.js';
 export function createApp() {
@@ -16,13 +18,25 @@ export function createApp() {
         credentials: true
     }));
     app.use(express.json({ limit: '1mb' }));
-    app.get('/api/health', (_request, response) => {
+    app.get('/', (_request, response) => {
+        response.json({
+            ok: true,
+            service: 'Smothies API',
+            timestamp: new Date().toISOString()
+        });
+    });
+    app.get('/api/health', asyncHandler(async (_request, response) => {
+        await ensureAppRuntime();
         response.json({
             ok: true,
             database: databaseStatus(),
             timestamp: new Date().toISOString()
         });
-    });
+    }));
+    app.use('/api', asyncHandler(async (_request, _response, next) => {
+        await ensureAppRuntime();
+        next();
+    }));
     app.use('/api', authRouter);
     app.use('/api', smoothiesRouter);
     app.use('/api', cartRouter);
@@ -47,3 +61,5 @@ function errorHandler(error, _request, response, _next) {
         }
     });
 }
+const app = createApp();
+export default app;

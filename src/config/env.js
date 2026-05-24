@@ -13,10 +13,14 @@ function readCsv(name, fallback) {
         .map((item) => item.trim())
         .filter(Boolean);
 }
+function readAllowedOrigins(name, fallback) {
+    const values = readCsv(name, fallback);
+    return values.includes('*') ? '*' : values;
+}
 export const env = {
     port: Number(process.env.PORT ?? 3000),
-    mongodbUri: readRequired('MONGODB_URI', 'mongodb+srv://admin:P42DELmLmGec267y@smothies.stfnzbz.mongodb.net/?appName=smothies'),
+    mongodbUri: readRequired('MONGODB_URI'),
     mongodbDbName: readRequired('MONGODB_DB_NAME', 'smothies'),
-    corsOrigin: readCsv('CORS_ORIGIN', 'http://localhost:4200,http://localhost:8100'),
-    socketCorsOrigin: readCsv('SOCKET_CORS_ORIGIN', 'http://localhost:4200,http://localhost:8100')
+    corsOrigin: readAllowedOrigins('CORS_ORIGIN', 'http://localhost,http://localhost:4200,http://localhost:8100'),
+    socketCorsOrigin: readAllowedOrigins('SOCKET_CORS_ORIGIN', 'http://localhost,http://localhost:4200,http://localhost:8100')
 };
